@@ -1,0 +1,23 @@
+{
+  "name": "hotelpro-workspace",
+  "version": "1.0.0",
+  "description": "HotelPro - Full-stack Hotel Management System (MERN)",
+  "private": true,
+  "scripts": {
+    "server": "npm run dev --prefix server",
+    "client": "npm run dev --prefix client",
+    "seed": "npm run seed --prefix server",
+    "test:server": "npm test --prefix server",
+    "install:all": "npm install --prefix server && npm install --prefix client"
+  },
+  "keywords": [
+    "hotelpro",
+    "mern",
+    "hotel-management-system",
+    "react",
+    "express",
+    "mongodb"
+  ],
+  "author": "HotelPro Team",
+  "license": "ISC"
+}

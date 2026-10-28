@@ -1,15 +1,20 @@
 import axios from 'axios';
 
-// Dynamically resolve API URL with support for Vercel environment variables & browser overrides
+// Dynamically resolve API URL:
+// 1. Explicit environment variable if configured
+// 2. Local development when browsing on localhost
+// 3. Live cloud backend on Render (https://hotelpro-api-syim.onrender.com/api/v1)
 const resolveBaseUrl = () => {
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL.replace(/\/+$/, '');
   }
   if (typeof window !== 'undefined') {
-    const stored = window.localStorage.getItem('hotelpro_api_url') || window.localStorage.getItem('VITE_API_URL');
-    if (stored) return stored.replace(/\/+$/, '');
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (isLocal) {
+      return 'http://localhost:5000/api/v1';
+    }
   }
-  return 'http://localhost:5000/api/v1';
+  return 'https://hotelpro-api-syim.onrender.com/api/v1';
 };
 
 export const API_BASE_URL = resolveBaseUrl();

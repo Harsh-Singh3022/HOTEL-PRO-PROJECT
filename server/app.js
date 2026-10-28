@@ -95,17 +95,22 @@ app.get('/api/v1/health', (req, res) => {
   });
 });
 
-// API Routes mount
-app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/users', userRoutes);
-app.use('/api/v1/room-types', roomTypeRoutes);
-app.use('/api/v1/rooms', roomRoutes);
-app.use('/api/v1/bookings', bookingRoutes);
-app.use('/api/v1/guests', guestRoutes);
-app.use('/api/v1/payments', paymentRoutes);
-app.use('/api/v1/invoices', invoiceRoutes);
-app.use('/api/v1', dashboardRoutes); // mounts /dashboard/summary and /reports/*
-app.use('/api/v1/tasks', taskRoutes);
+// API Routes mount function (supports both /api/v1 and direct root prefixes)
+const mountRoutes = (prefix) => {
+  app.use(`${prefix}/auth`, authRoutes);
+  app.use(`${prefix}/users`, userRoutes);
+  app.use(`${prefix}/room-types`, roomTypeRoutes);
+  app.use(`${prefix}/rooms`, roomRoutes);
+  app.use(`${prefix}/bookings`, bookingRoutes);
+  app.use(`${prefix}/guests`, guestRoutes);
+  app.use(`${prefix}/payments`, paymentRoutes);
+  app.use(`${prefix}/invoices`, invoiceRoutes);
+  app.use(`${prefix}`, dashboardRoutes); // mounts /dashboard/summary and /reports/*
+  app.use(`${prefix}/tasks`, taskRoutes);
+};
+
+mountRoutes('/api/v1');
+mountRoutes(''); // Dual mount: handles requests with or without /api/v1 prefix
 
 // 404 Handler
 app.use('*', (req, res) => {

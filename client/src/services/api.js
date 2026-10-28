@@ -1,12 +1,22 @@
 import axios from 'axios';
 
+// Automatically ensure /api/v1 is present, preventing 404s when users provide root domain
+const normalizeApiUrl = (url) => {
+  if (!url) return '';
+  const clean = url.trim().replace(/\/+$/, '');
+  if (!clean.endsWith('/api/v1')) {
+    return `${clean}/api/v1`;
+  }
+  return clean;
+};
+
 // Dynamically resolve API URL:
-// 1. Explicit environment variable if configured
+// 1. Explicit environment variable VITE_API_URL (with auto-appended /api/v1)
 // 2. Local development when browsing on localhost
 // 3. Live cloud backend on Render (https://hotelpro-api-syim.onrender.com/api/v1)
 const resolveBaseUrl = () => {
   if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL.replace(/\/+$/, '');
+    return normalizeApiUrl(import.meta.env.VITE_API_URL);
   }
   if (typeof window !== 'undefined') {
     const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';

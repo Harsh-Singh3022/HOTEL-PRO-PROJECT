@@ -2,6 +2,15 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { sendError } = require('../utils/apiResponse');
 
+const getJwtSecret = () => {
+  return (
+    process.env.JWT_SECRET ||
+    process.env.JWT_ACCESS_SECRET ||
+    process.env.JWT_REFRESH_SECRET ||
+    'hotelpro_secret_fallback_key'
+  );
+};
+
 const protect = async (req, res, next) => {
   let token;
 
@@ -17,10 +26,7 @@ const protect = async (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || 'hotelpro_secret_fallback_key'
-    );
+    const decoded = jwt.verify(token, getJwtSecret());
 
     const user = await User.findById(decoded.id).select('-password');
     if (!user) {

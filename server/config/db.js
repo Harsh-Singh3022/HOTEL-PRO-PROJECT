@@ -1,20 +1,33 @@
 const mongoose = require('mongoose');
 
 const connectDB = async () => {
-  const uri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/hotelpro';
+  // Support both MONGODB_URI (standard cloud convention) and MONGO_URI
+  let uri = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/hotelpro';
+
+  // Normalize MongoDB Atlas URI if database name is omitted (e.g. ends with .mongodb.net/ or .mongodb.net)
+  if (uri.startsWith('mongodb+srv://')) {
+    if (uri.endsWith('.mongodb.net/')) {
+      uri = uri + 'hotelpro?retryWrites=true&w=majority';
+    } else if (uri.endsWith('.mongodb.net')) {
+      uri = uri + '/hotelpro?retryWrites=true&w=majority';
+    }
+  }
+
+  const maskedUri = uri.replace(/:[^:@]+@/, ':****@');
+
   try {
     const conn = await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 3000,
+      serverSelectionTimeoutMS: 8000,
     });
-    console.log(`[Database] MongoDB Connected: ${conn.connection.host}`);
+    console.log(`[Database] MongoDB Connected to host: ${conn.connection.host}`);
     return conn;
   } catch (error) {
-    console.warn(`[Database] Local MongoDB not active at ${uri} (${error.message}).`);
-    
-    // Auto-fallback to embedded mongodb-memory-server unless explicitly disabled
-    if (process.env.USE_MEMORY_DB !== 'false') {
+    console.warn(`[Database] Primary MongoDB connection failed at ${maskedUri}: ${error.message}`);
+
+    // In production, do not attempt to load development-only in-memory server
+    if (process.env.NODE_ENV !== 'production' && process.env.USE_MEMORY_DB !== 'false') {
       try {
-        console.log('[Database] Starting embedded in-memory MongoDB for seamless development...');
+        console.log('[Database] Starting embedded in-memory MongoDB for offline development...');
         const { MongoMemoryServer } = require('mongodb-memory-server');
         const mongod = await MongoMemoryServer.create();
         const memUri = mongod.getUri();

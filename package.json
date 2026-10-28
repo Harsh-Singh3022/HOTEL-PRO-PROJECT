@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "description": "HotelPro - Full-stack Hotel Management System (MERN)",
   "private": true,
+  "main": "server.js",
   "scripts": {
+    "start": "node server.js",
+    "build": "npm --prefix server install",
+    "postinstall": "npm --prefix server install",
     "server": "npm run dev --prefix server",
     "client": "npm run dev --prefix client",
     "seed": "npm run seed --prefix server",

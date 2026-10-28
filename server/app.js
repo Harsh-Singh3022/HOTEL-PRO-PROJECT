@@ -24,18 +24,27 @@ const app = express();
 app.use(helmet());
 
 // CORS configuration
+const configuredClientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',').map(s => s.trim()) : [];
 const allowedOrigins = [
-  process.env.CLIENT_URL || 'http://localhost:5173',
+  ...configuredClientUrl,
+  'http://localhost:5173',
   'http://localhost:3000',
   'http://127.0.0.1:5173',
   'http://127.0.0.1:3000',
 ];
+
 app.use(
   cors({
     origin: function (origin, callback) {
-      // allow requests with no origin (like mobile apps, curl, postman)
+      // allow requests with no origin (like mobile apps, curl, postman, render health check)
       if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+      if (
+        allowedOrigins.indexOf(origin) !== -1 ||
+        process.env.NODE_ENV !== 'production' ||
+        process.env.CLIENT_URL === '*' ||
+        origin.endsWith('.onrender.com') ||
+        origin.endsWith('.vercel.app')
+      ) {
         return callback(null, true);
       }
       return callback(new Error('Blocked by CORS policy'));
@@ -63,6 +72,18 @@ const apiLimiter = rateLimit({
   },
 });
 app.use('/api/v1/auth', apiLimiter);
+
+// Root welcoming endpoint
+app.get('/', (req, res) => {
+  return res.status(200).json({
+    success: true,
+    message: '🏨 HotelPro REST API is operating normally in the cloud',
+    version: '1.0.0',
+    documentation: '/api/v1',
+    health: '/api/v1/health',
+    timestamp: new Date().toISOString(),
+  });
+});
 
 // Health check endpoint (PRD 13.3)
 app.get('/api/v1/health', (req, res) => {

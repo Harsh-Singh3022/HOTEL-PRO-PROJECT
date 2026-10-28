@@ -1,6 +1,18 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+// Dynamically resolve API URL with support for Vercel environment variables & browser overrides
+const resolveBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL.replace(/\/+$/, '');
+  }
+  if (typeof window !== 'undefined') {
+    const stored = window.localStorage.getItem('hotelpro_api_url') || window.localStorage.getItem('VITE_API_URL');
+    if (stored) return stored.replace(/\/+$/, '');
+  }
+  return 'http://localhost:5000/api/v1';
+};
+
+export const API_BASE_URL = resolveBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -51,12 +63,12 @@ export const roomService = {
   getRoomById: (id) => api.get(`/rooms/${id}`),
   createRoom: (data) => api.post('/rooms', data),
   updateRoom: (id, data) => api.put(`/rooms/${id}`, data),
-  updateRoomStatus: (id, status) => api.patch(`/rooms/${id}/status`, { status }),
   deleteRoom: (id) => api.delete(`/rooms/${id}`),
 };
 
 export const roomTypeService = {
   getRoomTypes: () => api.get('/room-types'),
+  getRoomTypeById: (id) => api.get(`/room-types/${id}`),
   createRoomType: (data) => api.post('/room-types', data),
   updateRoomType: (id, data) => api.put(`/room-types/${id}`, data),
   deleteRoomType: (id) => api.delete(`/room-types/${id}`),
@@ -64,52 +76,48 @@ export const roomTypeService = {
 
 export const bookingService = {
   createBooking: (data) => api.post('/bookings', data),
-  getAllBookings: (params) => api.get('/bookings', { params }),
-  getMyBookings: () => api.get('/bookings/my'),
+  getMyBookings: () => api.get('/bookings/my-bookings'),
   getBookingById: (id) => api.get(`/bookings/${id}`),
-  modifyBooking: (id, data) => api.put(`/bookings/${id}`, data),
-  cancelBooking: (id, data) => api.patch(`/bookings/${id}/cancel`, data),
-  checkIn: (id) => api.patch(`/bookings/${id}/check-in`),
-  checkOut: (id) => api.patch(`/bookings/${id}/check-out`),
-  addCharge: (id, data) => api.post(`/bookings/${id}/charges`, data),
+  getAllBookings: (params) => api.get('/bookings', { params }),
+  checkIn: (id, data) => api.post(`/bookings/${id}/check-in`, data),
+  checkOut: (id, data) => api.post(`/bookings/${id}/check-out`, data),
+  cancelBooking: (id, data) => api.post(`/bookings/${id}/cancel`, data),
+  addCharge: (id, data) => api.post(`/bookings/${id}/add-charge`, data),
 };
 
 export const guestService = {
   getGuests: (params) => api.get('/guests', { params }),
-  createGuest: (data) => api.post('/guests', data),
   getGuestById: (id) => api.get(`/guests/${id}`),
   updateGuest: (id, data) => api.put(`/guests/${id}`, data),
 };
 
 export const paymentService = {
   createPayment: (data) => api.post('/payments', data),
+  getPaymentById: (id) => api.get(`/payments/${id}`),
   getBookingPayments: (bookingId) => api.get(`/payments/booking/${bookingId}`),
-  processRefund: (id, data) => api.post(`/payments/${id}/refund`, data),
 };
 
 export const invoiceService = {
-  getInvoice: (bookingId) => api.get(`/invoices/booking/${bookingId}`),
-  generateInvoice: (bookingId) => api.post(`/invoices/booking/${bookingId}`),
+  getBookingInvoice: (bookingId) => api.get(`/invoices/booking/${bookingId}`),
+  getInvoiceById: (id) => api.get(`/invoices/${id}`),
 };
 
 export const dashboardService = {
   getSummary: () => api.get('/dashboard/summary'),
-  getOccupancyReport: () => api.get('/reports/occupancy'),
-  getRevenueReport: () => api.get('/reports/revenue'),
-  getBookingsReport: (params) => api.get('/reports/bookings', { params }),
-};
-
-export const userService = {
-  getUsers: (params) => api.get('/users', { params }),
-  createStaff: (data) => api.post('/users/staff', data),
-  updateUser: (id, data) => api.put(`/users/${id}`, data),
-  deleteUser: (id) => api.delete(`/users/${id}`),
+  getRevenueReport: (params) => api.get('/reports/revenue', { params }),
+  getOccupancyReport: (params) => api.get('/reports/occupancy', { params }),
 };
 
 export const taskService = {
   getTasks: (params) => api.get('/tasks', { params }),
   createTask: (data) => api.post('/tasks', data),
-  updateStatus: (id, status) => api.patch(`/tasks/${id}/status`, { status }),
+  updateTaskStatus: (id, data) => api.put(`/tasks/${id}/status`, data),
+};
+
+export const userService = {
+  getStaff: () => api.get('/users/staff'),
+  updateUserRole: (id, data) => api.put(`/users/${id}/role`, data),
+  toggleUserStatus: (id) => api.put(`/users/${id}/toggle-status`),
 };
 
 export default api;

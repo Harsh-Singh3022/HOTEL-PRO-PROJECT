@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { roomService, roomTypeService } from '../../services/api';
+import { roomService, roomTypeService, API_BASE_URL } from '../../services/api';
 import StatusBadge from '../../components/common/StatusBadge';
 
 const Rooms = () => {
@@ -35,7 +35,11 @@ const Rooms = () => {
         maxPrice
       );
     } catch (err) {
-      setError('Could not load room catalog. Please try again.');
+      if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && API_BASE_URL.includes('localhost')) {
+        setError('Connection Notice: Vercel frontend is currently pointing to localhost. Please configure VITE_API_URL in your Vercel Project Settings with your live Render backend URL and redeploy.');
+      } else {
+        setError('Could not load room catalog. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
